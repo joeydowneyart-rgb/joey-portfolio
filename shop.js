@@ -51,7 +51,7 @@
  }
  document.addEventListener('DOMContentLoaded',()=>{
   const header=document.querySelector('header');
-  if(header){const link=node('a','shop-cart-link');link.href='cart.html';link.innerHTML='<svg aria-hidden="true" width="20" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span class="shop-cart-label">Cart</span><span data-cart-count>0</span>';header.insertBefore(link,header.querySelector('.menu'));}
+  if(header){const link=node('a','shop-cart-link');link.href='cart.html';link.innerHTML='<svg aria-hidden="true" width="20" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span class="shop-cart-label">Cart</span><span data-cart-count aria-live="polite" aria-atomic="true">0</span>';document.body.append(link);}
   const lb=document.getElementById('lightbox');let current=null;
   if(lb&&document.querySelector('[data-full^="cups/" ]')){
    const actions=node('div','shop-artwork-actions');const buy=node('button','shop-button shop-primary','Buy Now');const addButton=node('button','shop-button','Add to Cart');buy.type=addButton.type='button';const status=node('p','shop-cart-feedback');status.setAttribute('role','status');actions.append(buy,addButton);
