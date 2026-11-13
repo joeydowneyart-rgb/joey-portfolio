@@ -6,15 +6,23 @@
  const normalize=value=>Array.isArray(value)?[...new Set(value.filter(id=>typeof id==='string'&&catalog.has(id)))]:[];
  const subtotal=ids=>normalize(ids).reduce((sum,id)=>sum+catalog.get(id).price,0);
  // Cart storage contains product IDs only; do not restore prices from storage.
- function checkoutFields(value,fulfillment,email,origin){
+ function checkoutFields(value,fulfillment,email,origin,address={}){
   const selected=normalize(value),config=window.JD_SHOP_CONFIG||{};
   if(!selected.length||!config.merchant||!Number.isFinite(config.shipping))throw Error('Checkout is not ready.');
   if(!['pickup','shipping'].includes(fulfillment))throw Error('Choose pickup or shipping.');
   const fields={cmd:'_cart',upload:'1',business:config.merchant,currency_code:config.currency||'USD',charset:'utf-8',no_shipping:fulfillment==='pickup'?'1':'2',email,custom:fulfillment==='pickup'?'Local pickup: Edinboro, PA':'Ship order',return:new URL('cart.html?payment=returned',origin).href,cancel_return:new URL('cart.html?payment=cancelled',origin).href};
+  if(fulfillment==='shipping'){
+   for(const name of ['first_name','last_name','address1','city','zip','country'])if(!String(address[name]||'').trim())throw Error('Complete your shipping address.');
+   if(!/^[A-Z]{2}$/.test(String(address.country).toUpperCase()))throw Error('Enter a two-letter country code.');
+   if(['US','CA'].includes(String(address.country).toUpperCase())&&!String(address.state||'').trim())throw Error('Enter your state or province.');
+   for(const name of ['first_name','last_name','address1','address2','city','state','zip','country'])fields[name]=String(address[name]||'').trim();
+   fields.country=fields.country.toUpperCase();
+  }
   selected.forEach((id,index)=>{const p=catalog.get(id),n=index+1;fields['item_name_'+n]=p.title;fields['item_number_'+n]=p.id;fields['amount_'+n]=p.price.toFixed(2);fields['quantity_'+n]='1';fields['shipping_'+n]=index===0&&fulfillment==='shipping'?config.shipping.toFixed(2):'0.00';fields['shipping2_'+n]='0.00';});
   return fields;
  }
  window.JDShop={normalize,subtotal,checkoutFields};
+ let emailComplete=false,deliveryComplete=false;
  let ids=[];try{ids=normalize(JSON.parse(localStorage.getItem(key)||'[]'));}catch{}
  const money=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value);
  function save(){try{localStorage.setItem(key,JSON.stringify(ids));}catch{}render();}
@@ -33,12 +41,13 @@
   const empty=ids.length===0;document.getElementById('shop-empty').hidden=!empty;document.getElementById('shop-checkout').hidden=empty;
   document.querySelectorAll('[data-cart-subtotal]').forEach(el=>el.textContent=money(subtotal(ids)));
   const config=window.JD_SHOP_CONFIG||{};const ready=!!config.merchant&&Number.isFinite(config.shipping);
-  const pay=document.getElementById('shop-paypal');pay.disabled=empty||!ready;
+  const pay=document.getElementById('shop-paypal');pay.disabled=empty||!ready||!emailComplete||!deliveryComplete;
   document.getElementById('shop-payment-status').hidden=ready;
-  const pickup=document.querySelector('input[name="fulfillment"]:checked')?.value==='pickup';
-  const shipping=document.getElementById('shop-shipping');shipping.textContent=pickup?'Free pickup — Edinboro, PA':typeof config.shipping==='number'?money(config.shipping):'Calculated for your destination';
+  const fulfillment=document.querySelector('input[name="fulfillment"]:checked')?.value;
+  const pickup=fulfillment==='pickup';
+  const shipping=document.getElementById('shop-shipping');shipping.textContent=!fulfillment?'Choose delivery':pickup?'Free pickup — Edinboro, PA':typeof config.shipping==='number'?money(config.shipping):'Calculated for your destination';
   document.getElementById('shop-total-label').textContent=typeof config.shipping==='number'?'Total before any applicable tax':'Items total';
-  document.getElementById('shop-total').textContent=money(subtotal(ids)+(!pickup&&typeof config.shipping==='number'?config.shipping:0));
+  document.getElementById('shop-total').textContent=money(subtotal(ids)+(fulfillment==='shipping'&&typeof config.shipping==='number'?config.shipping:0));
  }
  document.addEventListener('DOMContentLoaded',()=>{
   const header=document.querySelector('header');
@@ -52,19 +61,45 @@
    addButton.addEventListener('click',()=>{if(current&&add(current.id)){addButton.textContent='In Cart';status.textContent=current.title+' is in your cart.';}});
    buy.addEventListener('click',()=>{if(current&&add(current.id))location.assign('cart.html');});
   }
-  document.querySelectorAll('input[name="fulfillment"]').forEach(input=>input.addEventListener('change',render));
-  const form=document.getElementById('shop-email-form');
-  form?.addEventListener('submit',event=>{event.preventDefault();if(!form.reportValidity())return;document.getElementById('shop-delivery').open=true;document.getElementById('shop-delivery').querySelector('summary').focus();});
-  document.getElementById('shop-delivery-continue')?.addEventListener('click',()=>{document.getElementById('shop-payment').open=true;document.getElementById('shop-payment').querySelector('summary').focus();});
+  const emailForm=document.getElementById('shop-email-form'),deliveryForm=document.getElementById('shop-delivery-form');
+  const deliveryStep=document.getElementById('shop-delivery'),paymentStep=document.getElementById('shop-payment');
+  const syncGates=()=>{
+   for(const [step,unlocked] of [[deliveryStep,emailComplete],[paymentStep,emailComplete&&deliveryComplete]]){
+    if(!step)continue;const summary=step.querySelector('summary');summary.setAttribute('aria-disabled',String(!unlocked));summary.tabIndex=unlocked?0:-1;if(!unlocked)step.open=false;
+   }render();
+  };
+  for(const [step,allowed] of [[deliveryStep,()=>emailComplete],[paymentStep,()=>emailComplete&&deliveryComplete]]){
+   step?.querySelector('summary').addEventListener('click',event=>{if(!allowed())event.preventDefault();});
+   step?.addEventListener('toggle',()=>{if(step.open&&!allowed())step.open=false;});
+  }
+  emailForm?.addEventListener('input',()=>{emailComplete=false;deliveryComplete=false;syncGates();});
+  emailForm?.addEventListener('submit',event=>{event.preventDefault();if(!emailForm.reportValidity())return;emailComplete=true;syncGates();document.getElementById('shop-email-step').open=false;deliveryStep.open=true;deliveryStep.querySelector('summary').focus();});
+  const shippingFields=document.getElementById('shop-address');
+  const updateAddress=()=>{
+   if(!deliveryForm)return;const shipping=deliveryForm.querySelector('input[name="fulfillment"]:checked')?.value==='shipping';
+   shippingFields.hidden=!shipping;shippingFields.disabled=!shipping;
+   const country=deliveryForm.elements.country.value.trim().toUpperCase();deliveryForm.elements.state.required=['US','CA'].includes(country);
+  };
+  deliveryForm?.addEventListener('input',()=>{deliveryComplete=false;updateAddress();syncGates();});
+  deliveryForm?.addEventListener('change',()=>{deliveryComplete=false;updateAddress();syncGates();});
+  deliveryForm?.addEventListener('submit',event=>{
+   event.preventDefault();if(!emailComplete)return;updateAddress();if(!deliveryForm.reportValidity())return;
+   const mode=deliveryForm.querySelector('input[name="fulfillment"]:checked')?.value;if(!mode)return;
+   const fields=Array.from(shippingFields.querySelectorAll('input[required]')).filter(input=>!input.value.trim());if(mode==='shipping'&&fields.length){fields[0].value='';fields[0].reportValidity();fields[0].focus();return;}
+   deliveryComplete=true;syncGates();deliveryStep.open=false;paymentStep.open=true;paymentStep.querySelector('summary').focus();
+  });
+  updateAddress();syncGates();
   document.getElementById('shop-paypal')?.addEventListener('click',()=>{
-   const config=window.JD_SHOP_CONFIG||{};if(!ids.length||!config.merchant||!Number.isFinite(config.shipping))return;
+   const config=window.JD_SHOP_CONFIG||{};if(!ids.length||!config.merchant||!Number.isFinite(config.shipping)||!emailComplete||!deliveryComplete)return;
    const email=document.getElementById('shop-email');if(!email.checkValidity()){email.reportValidity();email.focus();return;}
    // PayPal Payments Standard cart upload. Payment is completed on PayPal.
    // A return URL is not proof of payment; orders are confirmed in PayPal.
    const button=document.getElementById('shop-paypal'),status=document.getElementById('shop-payment-status');button.disabled=true;
    try{
-    const fulfillment=document.querySelector('input[name="fulfillment"]:checked')?.value||'shipping';
-    const fields=checkoutFields(ids,fulfillment,email.value,location.href);
+    const fulfillment=document.querySelector('input[name="fulfillment"]:checked')?.value;
+    if(!deliveryForm.reportValidity())return;
+    const address={};shippingFields.querySelectorAll('input[name]').forEach(input=>address[input.name]=input.value.trim());
+    const fields=checkoutFields(ids,fulfillment,email.value,location.href,address);
     const form=node('form');form.method='POST';form.action='https://www.paypal.com/cgi-bin/webscr';
     Object.entries(fields).forEach(([name,value])=>{const input=node('input');input.type='hidden';input.name=name;input.value=value;form.append(input);});
     document.body.append(form);form.submit();
