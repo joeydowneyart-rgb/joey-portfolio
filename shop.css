@@ -11,3 +11,6 @@
 
 /* Small header cart with a plain adjacent count. */
 .shop-cart-link{top:30px;right:5%;width:auto;height:28px;padding:0;gap:5px;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#171717;font-size:12px}.shop-cart-link:hover{background:transparent;opacity:.65}.shop-cart-link svg{width:23px;height:23px}.shop-cart-link [data-cart-count]{position:static;display:inline;min-width:0;height:auto;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font-size:12px;line-height:1}.shop-cart-link:focus-visible{outline:2px solid #444;outline-offset:6px}@media(max-width:850px){.shop-cart-link{top:22px;right:5%;margin:0}}
+
+/* Override the image viewer button background in every interaction state. */
+.lightbox .shop-artwork-actions .shop-button{background:#fff;color:#333;border:1px solid #444}.lightbox .shop-artwork-actions .shop-button:hover{background:#eee;color:#222}.lightbox .shop-artwork-actions .shop-primary{background:#353535;color:#fff;border-color:#353535}.lightbox .shop-artwork-actions .shop-primary:hover,.lightbox .shop-artwork-actions .shop-primary:focus-visible{background:#171717;color:#fff;border-color:#171717}.lightbox .shop-artwork-actions .shop-primary:active{background:#000;color:#fff}
