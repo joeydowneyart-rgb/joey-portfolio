@@ -52,7 +52,7 @@
  }
  document.addEventListener('DOMContentLoaded',()=>{
   const header=document.querySelector('header');
-  if(header){const link=node('a','shop-cart-link');link.href='cart.html';link.innerHTML='<svg aria-hidden="true" width="20" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span class="shop-cart-label">Cart</span><span data-cart-count aria-live="polite" aria-atomic="true">0</span>';document.body.append(link);}
+  if(header){const link=node('a','shop-cart-link');link.href='cart.html';link.innerHTML='<svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="currentColor"><path d="M1 2h3.2a1 1 0 0 1 .98.78L5.7 5H22l-2.5 9.1a1 1 0 0 1-.96.74H8.1l.5 2.16H19v1.5H7.4a1 1 0 0 1-.97-.77L2.98 3.5H1V2Z"/><circle cx="9" cy="21" r="1.7"/><circle cx="18" cy="21" r="1.7"/></svg><span data-cart-count aria-live="polite" aria-atomic="true">0</span>';document.body.append(link);}
   const lb=document.getElementById('lightbox');let current=null;
   if(lb&&document.querySelector('[data-full^="cups/" ]')){
    const actions=node('div','shop-artwork-actions');const buy=node('button','shop-button shop-primary','Buy Now');const addButton=node('button','shop-button','Add to Cart');buy.type=addButton.type='button';const status=node('p','shop-cart-feedback');status.setAttribute('role','status');actions.append(buy,addButton);
