@@ -13,7 +13,8 @@
   const fields={cmd:'_cart',upload:'1',business:config.merchant,currency_code:config.currency||'USD',charset:'utf-8',no_shipping:fulfillment==='pickup'?'1':'2',email,custom:fulfillment==='pickup'?'Local pickup: Edinboro, PA':'Ship order',return:new URL('cart.html?payment=returned',origin).href,cancel_return:new URL('cart.html?payment=cancelled',origin).href};
   if(fulfillment==='shipping'){
    for(const name of ['first_name','last_name','address1','city','zip','country'])if(!String(address[name]||'').trim())throw Error('Complete your shipping address.');
-   if(!/^[A-Z]{2}$/.test(String(address.country).toUpperCase()))throw Error('Enter a two-letter country code.');
+   if(String(address.country).toUpperCase()!=='US')throw Error('Shipping is currently available within the USA only.');
+   if(!/^[0-9]{5}(-[0-9]{4})?$/.test(String(address.zip).trim()))throw Error('Enter a valid US ZIP code.');
    if(['US','CA'].includes(String(address.country).toUpperCase())&&!String(address.state||'').trim())throw Error('Enter your state or province.');
    for(const name of ['first_name','last_name','address1','address2','city','state','zip','country'])fields[name]=String(address[name]||'').trim();
    fields.country=fields.country.toUpperCase();
@@ -98,7 +99,7 @@
    try{
     const fulfillment=document.querySelector('input[name="fulfillment"]:checked')?.value;
     if(!deliveryForm.reportValidity())return;
-    const address={};shippingFields.querySelectorAll('input[name]').forEach(input=>address[input.name]=input.value.trim());
+    const address={};shippingFields.querySelectorAll('input[name],select[name]').forEach(input=>address[input.name]=input.value.trim());
     const fields=checkoutFields(ids,fulfillment,email.value,location.href,address);
     const form=node('form');form.method='POST';form.action='https://www.paypal.com/cgi-bin/webscr';
     Object.entries(fields).forEach(([name,value])=>{const input=node('input');input.type='hidden';input.name=name;input.value=value;form.append(input);});
