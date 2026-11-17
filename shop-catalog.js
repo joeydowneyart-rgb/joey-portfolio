@@ -5,7 +5,7 @@ window.JD_SHOP_PRODUCTS = [
     "title": "Lion Cup",
     "image": "assets/cups/IMG_8681.jpg",
     "price": 250,
-    "available": true
+    "available": false
   },
   {
     "id": "cups/IMG_8720.jpg",
@@ -26,14 +26,14 @@ window.JD_SHOP_PRODUCTS = [
     "title": "Puffin Cup",
     "image": "assets/cups/IMG_8684.jpg",
     "price": 250,
-    "available": true
+    "available": false
   },
   {
     "id": "cups/IMG_8679.jpg",
     "title": "Duck Cup II",
     "image": "assets/cups/IMG_8679.jpg",
     "price": 250,
-    "available": true
+    "available": false
   },
   {
     "id": "cups/IMG_8687.jpg",
