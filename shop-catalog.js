@@ -54,7 +54,7 @@ window.JD_SHOP_PRODUCTS = [
     "title": "Duck Cup III",
     "image": "assets/cups/IMG_8691.jpg",
     "price": 250,
-    "available": true
+    "available": false
   },
   {
     "id": "cups/IMG_8702.jpg",
