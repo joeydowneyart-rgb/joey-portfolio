@@ -12,7 +12,7 @@ window.JD_SHOP_PRODUCTS = [
     "title": "Chicken Cup",
     "image": "assets/cups/IMG_8720.jpg",
     "price": 250,
-    "available": true
+    "available": false
   },
   {
     "id": "cups/IMG_8689.jpg",
