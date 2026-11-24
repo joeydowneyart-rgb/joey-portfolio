@@ -6,6 +6,10 @@
 .rumination{margin-top:55px}.rumination h2{margin:0 0 20px}
 .rumination .rumination-row{display:grid;grid-template-columns:repeat(4,minmax(145px,1fr));gap:20px;overflow-x:auto;padding:4px 4px 12px}
 .rumination .item img{height:auto;aspect-ratio:4/5}
+.rumination .item img,.lightbox-images img[src^="assets/mugs-cups/"]{
+  mask-image:linear-gradient(to right,transparent,#000 3%,#000 97%,transparent),linear-gradient(to bottom,transparent,#000 3%,#000 97%,transparent);
+  mask-composite:intersect;
+}
 .rumination .item[data-title="Studies in Rumination: Wave"] img{scale:.96;translate:0 1.6%}
 .lightbox-images.has-four img{width:calc((100% - 72px)/4)}
 @media(max-width:600px){.lightbox-images.has-four img,.lightbox-images.has-four img:first-child{width:calc(50% - 6px)}}
